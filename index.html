@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="A polished local weather app powered by Open-Meteo."
+    />
+    <title>Weather | Simple local forecast</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="script.js" defer></script>
+  </head>
+  <body class="theme-sunny">
+    <!-- Dynamic background layers -->
+    <div class="background-scene" aria-hidden="true">
+      <div class="background-layer background-sunny is-active" data-theme="sunny"></div>
+      <div class="background-layer background-cloudy" data-theme="cloudy"></div>
+      <div class="background-layer background-rain" data-theme="rain"></div>
+      <div class="background-layer background-storm" data-theme="storm"></div>
+      <div class="background-layer background-night" data-theme="night"></div>
+      <span class="background-orb orb-one"></span>
+      <span class="background-orb orb-two"></span>
+      <span class="background-orb orb-three"></span>
+      <div class="background-noise"></div>
+    </div>
+
+    <div class="app-shell">
+      <!-- Header and search -->
+      <header class="hero">
+        <div class="hero-copy">
+          <p class="eyebrow">Weather</p>
+          <h1>Weather</h1>
+          <p class="subtitle">Simple local forecast</p>
+        </div>
+
+        <form class="search-form" id="search-form" role="search" novalidate>
+          <label class="sr-only" for="city-input">Search by city</label>
+          <div class="search-field">
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+                <circle cx="11" cy="11" r="7"></circle>
+                <path d="M20 20l-3.5-3.5"></path>
+              </svg>
+            </span>
+            <input
+              id="city-input"
+              name="city"
+              type="search"
+              placeholder="Search by city"
+              autocomplete="off"
+              enterkeyhint="search"
+              autofocus
+            />
+            <button id="search-button" class="search-button" type="submit">
+              Search
+            </button>
+          </div>
+        </form>
+      </header>
+
+      <main class="dashboard" id="dashboard">
+        <div class="loading-overlay" id="loading-overlay" hidden>
+          <div class="loading-indicator" role="status" aria-live="polite">
+            <span class="spinner" aria-hidden="true"></span>
+            <p>Fetching the latest forecast</p>
+          </div>
+        </div>
+
+        <div
+          class="status-banner"
+          id="status-banner"
+          role="status"
+          aria-live="polite"
+          hidden
+        ></div>
+
+        <!-- Current conditions -->
+        <section class="panel panel-current" aria-labelledby="current-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Current weather</p>
+              <h2 id="current-heading">Right now</h2>
+            </div>
+            <p class="time-chip" id="time-chip">Local time updating...</p>
+          </div>
+
+          <div class="current-weather" id="current-weather">
+            <div class="skeleton-current">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-line skeleton-line-lg"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton-metrics">
+                <div class="skeleton skeleton-metric"></div>
+                <div class="skeleton skeleton-metric"></div>
+                <div class="skeleton skeleton-metric"></div>
+                <div class="skeleton skeleton-metric"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- Forecast cards -->
+        <section class="panel panel-forecast" aria-labelledby="forecast-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Outlook</p>
+              <h2 id="forecast-heading">5-day forecast</h2>
+            </div>
+          </div>
+
+          <div class="forecast-grid" id="forecast-grid">
+            <article class="forecast-card forecast-card-skeleton">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-icon"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+            </article>
+            <article class="forecast-card forecast-card-skeleton">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-icon"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+            </article>
+            <article class="forecast-card forecast-card-skeleton">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-icon"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+            </article>
+            <article class="forecast-card forecast-card-skeleton">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-icon"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+            </article>
+            <article class="forecast-card forecast-card-skeleton">
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+              <div class="skeleton skeleton-icon"></div>
+              <div class="skeleton skeleton-line skeleton-line-md"></div>
+              <div class="skeleton skeleton-line skeleton-line-sm"></div>
+            </article>
+          </div>
+        </section>
+
+        <!-- Recent searches -->
+        <section class="panel panel-recent" aria-labelledby="recent-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="panel-kicker">Quick access</p>
+              <h2 id="recent-heading">Recent searches</h2>
+            </div>
+          </div>
+
+          <div class="recent-searches" id="recent-searches">
+            <p class="empty-copy">Recent cities will appear here after a search.</p>
+          </div>
+        </section>
+      </main>
+    </div>
+  </body>
+</html>
