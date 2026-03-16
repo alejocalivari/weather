@@ -3,72 +3,308 @@
 // App configuration and shared state
 const DEFAULT_CITY = "Concepci\u00f3n del Uruguay";
 const RECENT_SEARCHES_KEY = "weather-recent-searches";
+const LANGUAGE_STORAGE_KEY = "weather-language";
 const MAX_RECENT_SEARCHES = 5;
+const SUPPORTED_LANGUAGES = ["en", "es"];
+const LANGUAGE_LOCALES = {
+  en: "en-US",
+  es: "es-AR",
+};
 
 const state = {
   activeTheme: "sunny",
   hasLoadedWeather: false,
   isLoading: false,
   recentSearches: [],
+  language: "en",
+  activePlace: null,
+  activeWeather: null,
+  status: null,
+  emptyWeather: null,
+  emptyForecast: null,
+  timeChip: {
+    mode: "copy",
+    key: "misc.localTimeUpdating",
+    value: null,
+  },
 };
 
 const elements = {
   searchForm: document.getElementById("search-form"),
   cityInput: document.getElementById("city-input"),
   searchButton: document.getElementById("search-button"),
+  languageToggle: document.getElementById("language-toggle"),
   statusBanner: document.getElementById("status-banner"),
   loadingOverlay: document.getElementById("loading-overlay"),
   currentWeather: document.getElementById("current-weather"),
   forecastGrid: document.getElementById("forecast-grid"),
   recentSearches: document.getElementById("recent-searches"),
   timeChip: document.getElementById("time-chip"),
+  metaDescription: document.getElementById("meta-description"),
   backgroundLayers: Array.from(document.querySelectorAll(".background-layer")),
 };
 
 const WEATHER_CODE_MAP = {
-  0: { label: "Clear sky", group: "clear" },
-  1: { label: "Mostly clear", group: "clear" },
-  2: { label: "Partly cloudy", group: "clouds" },
-  3: { label: "Overcast", group: "clouds" },
-  45: { label: "Fog", group: "fog" },
-  48: { label: "Icy fog", group: "fog" },
-  51: { label: "Light drizzle", group: "rain" },
-  53: { label: "Drizzle", group: "rain" },
-  55: { label: "Heavy drizzle", group: "rain" },
-  56: { label: "Freezing drizzle", group: "rain" },
-  57: { label: "Dense freezing drizzle", group: "rain" },
-  61: { label: "Light rain", group: "rain" },
-  63: { label: "Rain", group: "rain" },
-  65: { label: "Heavy rain", group: "rain" },
-  66: { label: "Freezing rain", group: "rain" },
-  67: { label: "Heavy freezing rain", group: "rain" },
-  71: { label: "Light snow", group: "snow" },
-  73: { label: "Snow", group: "snow" },
-  75: { label: "Heavy snow", group: "snow" },
-  77: { label: "Snow grains", group: "snow" },
-  80: { label: "Light showers", group: "rain" },
-  81: { label: "Rain showers", group: "rain" },
-  82: { label: "Heavy showers", group: "rain" },
-  85: { label: "Snow showers", group: "snow" },
-  86: { label: "Heavy snow showers", group: "snow" },
-  95: { label: "Thunderstorm", group: "storm" },
-  96: { label: "Storm with hail", group: "storm" },
-  99: { label: "Severe storm with hail", group: "storm" },
+  0: { labelKey: "weather.clearSky", group: "clear" },
+  1: { labelKey: "weather.mostlyClear", group: "clear" },
+  2: { labelKey: "weather.partlyCloudy", group: "clouds" },
+  3: { labelKey: "weather.overcast", group: "clouds" },
+  45: { labelKey: "weather.fog", group: "fog" },
+  48: { labelKey: "weather.icyFog", group: "fog" },
+  51: { labelKey: "weather.lightDrizzle", group: "rain" },
+  53: { labelKey: "weather.drizzle", group: "rain" },
+  55: { labelKey: "weather.heavyDrizzle", group: "rain" },
+  56: { labelKey: "weather.freezingDrizzle", group: "rain" },
+  57: { labelKey: "weather.denseFreezingDrizzle", group: "rain" },
+  61: { labelKey: "weather.lightRain", group: "rain" },
+  63: { labelKey: "weather.rain", group: "rain" },
+  65: { labelKey: "weather.heavyRain", group: "rain" },
+  66: { labelKey: "weather.freezingRain", group: "rain" },
+  67: { labelKey: "weather.heavyFreezingRain", group: "rain" },
+  71: { labelKey: "weather.lightSnow", group: "snow" },
+  73: { labelKey: "weather.snow", group: "snow" },
+  75: { labelKey: "weather.heavySnow", group: "snow" },
+  77: { labelKey: "weather.snowGrains", group: "snow" },
+  80: { labelKey: "weather.lightShowers", group: "rain" },
+  81: { labelKey: "weather.rainShowers", group: "rain" },
+  82: { labelKey: "weather.heavyShowers", group: "rain" },
+  85: { labelKey: "weather.snowShowers", group: "snow" },
+  86: { labelKey: "weather.heavySnowShowers", group: "snow" },
+  95: { labelKey: "weather.thunderstorm", group: "storm" },
+  96: { labelKey: "weather.stormWithHail", group: "storm" },
+  99: { labelKey: "weather.severeStormWithHail", group: "storm" },
+};
+
+const TRANSLATIONS = {
+  en: {
+    meta: {
+      title: "Weather | Simple local forecast",
+      description: "A polished local weather app powered by Open-Meteo.",
+    },
+    app: {
+      eyebrow: "Weather",
+      title: "Weather",
+      subtitle: "Simple local forecast",
+    },
+    search: {
+      label: "Search by city",
+      placeholder: "Search by city",
+      button: "Search",
+      switchToEnglish: "Switch language to English",
+      switchToSpanish: "Switch language to Spanish",
+    },
+    loading: {
+      message: "Fetching the latest forecast",
+    },
+    panels: {
+      currentKicker: "Current weather",
+      currentTitle: "Right now",
+      forecastKicker: "Outlook",
+      forecastTitle: "5-day forecast",
+      recentKicker: "Quick access",
+      recentTitle: "Recent searches",
+    },
+    metrics: {
+      feelsLike: "Feels like",
+      humidity: "Humidity",
+      windSpeed: "Wind speed",
+      sky: "Sky",
+      daylight: "Daylight",
+      nightfall: "Nightfall",
+    },
+    current: {
+      feelsLikeValue: "Feels like {temperature}",
+    },
+    empty: {
+      recentSearches: "Recent cities will appear here after a search.",
+      weatherUnavailableTitle: "Forecast unavailable",
+      weatherUnavailableMessage:
+        "Try another city and we will bring in the latest local conditions.",
+      forecastAfterSearch:
+        "Your five-day outlook will appear here after a successful search.",
+      noDailyForecast: "No daily forecast is available for this location yet.",
+    },
+    errors: {
+      enterCity: "Enter a city name to see the local forecast.",
+      serviceUnavailable:
+        "Unable to reach the weather service right now. Check your connection and try again.",
+      loadFailed: "Unable to load weather data right now. Please try again in a moment.",
+      citySearchUnavailable:
+        "Unable to reach city search right now. Please try again shortly.",
+      cityNotFound:
+        "We could not find that city. Try a nearby place or check the spelling.",
+      forecastServiceUnavailable:
+        "The weather service is unavailable at the moment. Please try again soon.",
+      incompleteData: "Weather data is incomplete right now. Please try another search.",
+    },
+    misc: {
+      localForecast: "Local forecast",
+      localTimeUpdating: "Local time updating...",
+      localTimeUnavailable: "Local time unavailable",
+      awaitingForecast: "Awaiting forecast",
+      weatherUpdate: "Weather update",
+    },
+    recent: {
+      loadAgain: "Load {city} again",
+    },
+    weather: {
+      clearSky: "Clear sky",
+      mostlyClear: "Mostly clear",
+      partlyCloudy: "Partly cloudy",
+      overcast: "Overcast",
+      fog: "Fog",
+      icyFog: "Icy fog",
+      lightDrizzle: "Light drizzle",
+      drizzle: "Drizzle",
+      heavyDrizzle: "Heavy drizzle",
+      freezingDrizzle: "Freezing drizzle",
+      denseFreezingDrizzle: "Dense freezing drizzle",
+      lightRain: "Light rain",
+      rain: "Rain",
+      heavyRain: "Heavy rain",
+      freezingRain: "Freezing rain",
+      heavyFreezingRain: "Heavy freezing rain",
+      lightSnow: "Light snow",
+      snow: "Snow",
+      heavySnow: "Heavy snow",
+      snowGrains: "Snow grains",
+      lightShowers: "Light showers",
+      rainShowers: "Rain showers",
+      heavyShowers: "Heavy showers",
+      snowShowers: "Snow showers",
+      heavySnowShowers: "Heavy snow showers",
+      thunderstorm: "Thunderstorm",
+      stormWithHail: "Storm with hail",
+      severeStormWithHail: "Severe storm with hail",
+    },
+  },
+  es: {
+    meta: {
+      title: "Clima | Pronóstico local simple",
+      description: "Una app del clima refinada impulsada por Open-Meteo.",
+    },
+    app: {
+      eyebrow: "Clima",
+      title: "Clima",
+      subtitle: "Pronóstico local simple",
+    },
+    search: {
+      label: "Buscar por ciudad",
+      placeholder: "Buscar por ciudad",
+      button: "Buscar",
+      switchToEnglish: "Cambiar idioma a inglés",
+      switchToSpanish: "Cambiar idioma a español",
+    },
+    loading: {
+      message: "Buscando el pronóstico más reciente",
+    },
+    panels: {
+      currentKicker: "Clima actual",
+      currentTitle: "Ahora",
+      forecastKicker: "Pronóstico",
+      forecastTitle: "Pronóstico de 5 días",
+      recentKicker: "Acceso rápido",
+      recentTitle: "Búsquedas recientes",
+    },
+    metrics: {
+      feelsLike: "Sensación térmica",
+      humidity: "Humedad",
+      windSpeed: "Viento",
+      sky: "Cielo",
+      daylight: "De día",
+      nightfall: "De noche",
+    },
+    current: {
+      feelsLikeValue: "Sensación térmica {temperature}",
+    },
+    empty: {
+      recentSearches: "Las ciudades recientes aparecerán aquí después de una búsqueda.",
+      weatherUnavailableTitle: "Pronóstico no disponible",
+      weatherUnavailableMessage:
+        "Probá con otra ciudad y mostraremos las condiciones locales más recientes.",
+      forecastAfterSearch:
+        "Tu pronóstico de cinco días aparecerá aquí después de una búsqueda exitosa.",
+      noDailyForecast: "Todavía no hay un pronóstico diario disponible para esta ubicación.",
+    },
+    errors: {
+      enterCity: "Ingresá una ciudad para ver el pronóstico local.",
+      serviceUnavailable:
+        "No se puede conectar con el servicio del clima ahora mismo. Revisá tu conexión e intentá otra vez.",
+      loadFailed:
+        "No se pudieron cargar los datos del clima en este momento. Intentá nuevamente en unos instantes.",
+      citySearchUnavailable:
+        "No se puede acceder a la búsqueda de ciudades ahora mismo. Intentá nuevamente en breve.",
+      cityNotFound:
+        "No pudimos encontrar esa ciudad. Probá con un lugar cercano o revisá la ortografía.",
+      forecastServiceUnavailable:
+        "El servicio del clima no está disponible en este momento. Intentá nuevamente pronto.",
+      incompleteData:
+        "Los datos del clima están incompletos ahora mismo. Probá con otra búsqueda.",
+    },
+    misc: {
+      localForecast: "Pronóstico local",
+      localTimeUpdating: "Actualizando hora local...",
+      localTimeUnavailable: "Hora local no disponible",
+      awaitingForecast: "Esperando pronóstico",
+      weatherUpdate: "Actualización del clima",
+    },
+    recent: {
+      loadAgain: "Volver a cargar {city}",
+    },
+    weather: {
+      clearSky: "Cielo despejado",
+      mostlyClear: "Mayormente despejado",
+      partlyCloudy: "Parcialmente nublado",
+      overcast: "Cubierto",
+      fog: "Niebla",
+      icyFog: "Niebla helada",
+      lightDrizzle: "Llovizna ligera",
+      drizzle: "Llovizna",
+      heavyDrizzle: "Llovizna intensa",
+      freezingDrizzle: "Llovizna helada",
+      denseFreezingDrizzle: "Llovizna helada densa",
+      lightRain: "Lluvia ligera",
+      rain: "Lluvia",
+      heavyRain: "Lluvia intensa",
+      freezingRain: "Lluvia helada",
+      heavyFreezingRain: "Lluvia helada intensa",
+      lightSnow: "Nieve ligera",
+      snow: "Nieve",
+      heavySnow: "Nieve intensa",
+      snowGrains: "Granizo de nieve",
+      lightShowers: "Chubascos ligeros",
+      rainShowers: "Chubascos",
+      heavyShowers: "Chubascos intensos",
+      snowShowers: "Nevadas intermitentes",
+      heavySnowShowers: "Nevadas intensas",
+      thunderstorm: "Tormenta eléctrica",
+      stormWithHail: "Tormenta con granizo",
+      severeStormWithHail: "Tormenta fuerte con granizo",
+    },
+  },
 };
 
 // Major weather actions
 document.addEventListener("DOMContentLoaded", init);
 
 function init() {
+  state.language = getStoredLanguage();
   state.recentSearches = getStoredRecentSearches();
-  renderRecentSearches();
+
+  setLanguage(state.language, { persist: false });
 
   elements.searchForm.addEventListener("submit", handleSearchSubmit);
   elements.recentSearches.addEventListener("click", handleRecentSearchClick);
+  elements.languageToggle.addEventListener("click", handleLanguageToggle);
 
   elements.cityInput.focus({ preventScroll: true });
   elements.cityInput.value = DEFAULT_CITY;
   searchWeatherByCity(DEFAULT_CITY);
+}
+
+function handleLanguageToggle() {
+  const nextLanguage = state.language === "en" ? "es" : "en";
+  setLanguage(nextLanguage);
 }
 
 async function handleSearchSubmit(event) {
@@ -80,7 +316,7 @@ async function handleSearchSubmit(event) {
 
   const city = elements.cityInput.value.trim();
   if (!city) {
-    showError("Enter a city name to see the local forecast.");
+    showError("errors.enterCity");
     elements.cityInput.focus();
     return;
   }
@@ -131,23 +367,26 @@ async function runWeatherRequest(requestHandler) {
 }
 
 function handleRequestError(error) {
-  const message =
+  const errorKey =
     error instanceof TypeError
-      ? "Unable to reach the weather service right now. Check your connection and try again."
-      : error instanceof Error && error.message
-        ? error.message
-        : "Unable to load weather data right now. Please try again in a moment.";
+      ? "errors.serviceUnavailable"
+      : error && typeof error === "object" && "messageKey" in error
+        ? error.messageKey
+        : "errors.loadFailed";
 
-  showError(message);
+  showError(errorKey);
 
   if (!state.hasLoadedWeather) {
-    renderEmptyWeatherState(
-      "Forecast unavailable",
-      "Try another city and we will bring in the latest local conditions."
-    );
-    renderEmptyForecastState("Your five-day outlook will appear here after a successful search.");
-    elements.timeChip.textContent = "Awaiting forecast";
+    renderEmptyWeatherState("empty.weatherUnavailableTitle", "empty.weatherUnavailableMessage");
+    renderEmptyForecastState("empty.forecastAfterSearch");
+    setTimeChipMessage("misc.awaitingForecast");
   }
+}
+
+function createTranslatedError(messageKey) {
+  const error = new Error(messageKey);
+  error.messageKey = messageKey;
+  return error;
 }
 
 // Network requests
@@ -161,12 +400,12 @@ async function fetchCoordinates(city) {
 
   const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?${params}`);
   if (!response.ok) {
-    throw new Error("Unable to reach city search right now. Please try again shortly.");
+    throw createTranslatedError("errors.citySearchUnavailable");
   }
 
   const data = await response.json();
   if (!Array.isArray(data.results) || data.results.length === 0) {
-    throw new Error("We could not find that city. Try a nearby place or check the spelling.");
+    throw createTranslatedError("errors.cityNotFound");
   }
 
   const bestMatch = selectBestLocation(data.results, city);
@@ -190,13 +429,13 @@ async function fetchWeather(lat, lon) {
   const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
 
   if (!response.ok) {
-    throw new Error("The weather service is unavailable at the moment. Please try again soon.");
+    throw createTranslatedError("errors.forecastServiceUnavailable");
   }
 
   const data = await response.json();
 
   if (!data.current || !data.daily) {
-    throw new Error("Weather data is incomplete right now. Please try another search.");
+    throw createTranslatedError("errors.incompleteData");
   }
 
   return data;
@@ -220,52 +459,188 @@ async function loadWeatherForPlace(place, options = {}) {
   clearStatus();
 }
 
+// Language helpers
+function setLanguage(language, options = {}) {
+  const { persist = true } = options;
+  const nextLanguage = SUPPORTED_LANGUAGES.includes(language) ? language : "en";
+  if (state.language === nextLanguage && persist) {
+    syncLanguageToggle();
+    return;
+  }
+
+  state.language = nextLanguage;
+  document.documentElement.lang = nextLanguage;
+  document.body.dataset.language = nextLanguage;
+
+  if (persist) {
+    try {
+      localStorage.setItem(LANGUAGE_STORAGE_KEY, nextLanguage);
+    } catch (error) {
+      console.warn("Unable to save language preference.", error);
+    }
+  }
+
+  applyTranslations();
+  rerenderLanguageSensitiveContent();
+}
+
+function getStoredLanguage() {
+  try {
+    const storedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
+    return SUPPORTED_LANGUAGES.includes(storedLanguage) ? storedLanguage : "en";
+  } catch (error) {
+    console.warn("Unable to read language preference.", error);
+    return "en";
+  }
+}
+
+function applyTranslations() {
+  document.title = translate("meta.title");
+
+  if (elements.metaDescription) {
+    elements.metaDescription.setAttribute("content", translate("meta.description"));
+  }
+
+  document.querySelectorAll("[data-i18n]").forEach((element) => {
+    if (element.id === "time-chip") {
+      return;
+    }
+
+    element.textContent = translate(element.dataset.i18n);
+  });
+
+  document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+    element.setAttribute("placeholder", translate(element.dataset.i18nPlaceholder));
+  });
+
+  syncLanguageToggle();
+}
+
+function syncLanguageToggle() {
+  if (!elements.languageToggle) {
+    return;
+  }
+
+  const nextLanguageKey =
+    state.language === "en" ? "search.switchToSpanish" : "search.switchToEnglish";
+
+  elements.languageToggle.dataset.language = state.language;
+  elements.languageToggle.setAttribute("aria-label", translate(nextLanguageKey));
+  elements.languageToggle.setAttribute("title", translate(nextLanguageKey));
+  elements.languageToggle.setAttribute("aria-pressed", String(state.language === "es"));
+
+  elements.languageToggle.querySelectorAll("[data-lang-option]").forEach((option) => {
+    option.classList.toggle("is-active", option.dataset.langOption === state.language);
+  });
+}
+
+function rerenderLanguageSensitiveContent() {
+  refreshStatus();
+  refreshTimeChip();
+  renderRecentSearches();
+
+  if (state.activePlace && state.activeWeather) {
+    renderCurrentWeather({ place: state.activePlace, weather: state.activeWeather });
+    renderForecast(state.activeWeather);
+    return;
+  }
+
+  if (state.emptyWeather) {
+    renderEmptyWeatherState(state.emptyWeather.titleKey, state.emptyWeather.messageKey);
+  }
+
+  if (state.emptyForecast) {
+    renderEmptyForecastState(state.emptyForecast.messageKey);
+  }
+}
+
+function setTimeChipMessage(key) {
+  state.timeChip = {
+    mode: "copy",
+    key,
+    value: null,
+  };
+  refreshTimeChip();
+}
+
+function setTimeChipLocalTime(localTime) {
+  state.timeChip = {
+    mode: "time",
+    key: null,
+    value: localTime,
+  };
+  refreshTimeChip();
+}
+
+function refreshTimeChip() {
+  if (!elements.timeChip) {
+    return;
+  }
+
+  elements.timeChip.textContent =
+    state.timeChip.mode === "time" && state.timeChip.value
+      ? formatLocalTime(state.timeChip.value)
+      : translate(state.timeChip.key || "misc.localTimeUpdating");
+}
+
 // Rendering helpers
 function renderCurrentWeather(data) {
   const { place, weather } = data;
   const details = getWeatherDetails(weather.current.weather_code, weather.current.is_day);
-  const regionText = [place.admin1, place.country].filter(Boolean).join(" / ");
+  const regionText = [place.admin1, place.country].filter(Boolean).join(" / ") || translate("misc.localForecast");
 
-  elements.timeChip.textContent = formatLocalTime(weather.current.time);
+  state.activePlace = place;
+  state.activeWeather = weather;
+  state.emptyWeather = null;
+  setTimeChipLocalTime(weather.current.time);
   elements.currentWeather.innerHTML = `
     <div class="current-layout">
       <div class="current-top">
         <div class="location-stack">
           <h3 class="location-name">${escapeHtml(place.name)}</h3>
-          <p class="location-meta">${escapeHtml(regionText || place.country || "Local forecast")}</p>
+          <p class="location-meta">${escapeHtml(regionText)}</p>
         </div>
         <p class="condition-badge">${escapeHtml(details.label)}</p>
       </div>
 
       <div class="current-main">
-        <div class="temp-group">
-          <p class="current-temp">${formatTemperature(weather.current.temperature_2m)}</p>
-          <p class="current-condition">${escapeHtml(details.label)}</p>
-          <p class="feels-like">Feels like ${formatTemperature(weather.current.apparent_temperature)}</p>
+        <div class="temp-hero">
+          <div class="temp-group">
+            <div class="temp-display">
+              <p class="current-temp">${formatTemperature(weather.current.temperature_2m)}</p>
+              <div class="current-icon-wrap">
+                ${createWeatherIcon(weather.current.weather_code, Boolean(weather.current.is_day), true)}
+              </div>
+            </div>
+            <div class="condition-stack">
+              <p class="current-condition">${escapeHtml(details.label)}</p>
+              <p class="feels-like">${translate("current.feelsLikeValue", {
+                temperature: formatTemperature(weather.current.apparent_temperature),
+              })}</p>
+            </div>
+          </div>
         </div>
 
-        <div class="current-icon-wrap">
-          ${createWeatherIcon(weather.current.weather_code, Boolean(weather.current.is_day), true)}
+        <div class="metrics-grid">
+          <article class="metric-card">
+            <span class="metric-label">${translate("metrics.feelsLike")}</span>
+            <strong class="metric-value">${formatTemperature(weather.current.apparent_temperature)}</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">${translate("metrics.humidity")}</span>
+            <strong class="metric-value">${formatPercentage(weather.current.relative_humidity_2m)}</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">${translate("metrics.windSpeed")}</span>
+            <strong class="metric-value">${formatWind(weather.current.wind_speed_10m)}</strong>
+          </article>
+          <article class="metric-card">
+            <span class="metric-label">${translate("metrics.sky")}</span>
+            <strong class="metric-value">${translate(
+              weather.current.is_day ? "metrics.daylight" : "metrics.nightfall"
+            )}</strong>
+          </article>
         </div>
-      </div>
-
-      <div class="metrics-grid">
-        <article class="metric-card">
-          <span class="metric-label">Feels like</span>
-          <strong class="metric-value">${formatTemperature(weather.current.apparent_temperature)}</strong>
-        </article>
-        <article class="metric-card">
-          <span class="metric-label">Humidity</span>
-          <strong class="metric-value">${formatPercentage(weather.current.relative_humidity_2m)}</strong>
-        </article>
-        <article class="metric-card">
-          <span class="metric-label">Wind speed</span>
-          <strong class="metric-value">${formatWind(weather.current.wind_speed_10m)}</strong>
-        </article>
-        <article class="metric-card">
-          <span class="metric-label">Sky</span>
-          <strong class="metric-value">${weather.current.is_day ? "Daylight" : "Nightfall"}</strong>
-        </article>
       </div>
     </div>
   `;
@@ -274,24 +649,30 @@ function renderCurrentWeather(data) {
 function renderForecast(data) {
   const forecastEntries = buildForecastEntries(data.daily);
   if (forecastEntries.length === 0) {
-    renderEmptyForecastState("No daily forecast is available for this location yet.");
+    renderEmptyForecastState("empty.noDailyForecast");
     return;
   }
 
+  state.emptyForecast = null;
   elements.forecastGrid.innerHTML = forecastEntries
     .map((day, index) => {
       const details = getWeatherDetails(day.weatherCode, true);
 
       return `
         <article class="forecast-card" style="animation-delay: ${90 + index * 70}ms;">
-          <p class="forecast-day">${escapeHtml(formatForecastDay(day.date))}</p>
-          <p class="forecast-date">${escapeHtml(formatForecastDate(day.date))}</p>
-          <div class="forecast-icon-wrap">
-            ${createWeatherIcon(day.weatherCode, true, false)}
+          <div class="forecast-card-top">
+            <div class="forecast-copy">
+              <p class="forecast-day">${escapeHtml(formatForecastDay(day.date))}</p>
+              <p class="forecast-date">${escapeHtml(formatForecastDate(day.date))}</p>
+            </div>
+            <div class="forecast-icon-wrap">
+              ${createWeatherIcon(day.weatherCode, true, false)}
+            </div>
           </div>
           <p class="forecast-condition">${escapeHtml(details.label)}</p>
           <div class="forecast-temps">
             <span class="forecast-high">${formatTemperature(day.high)}</span>
+            <span class="forecast-divider" aria-hidden="true"></span>
             <span class="forecast-low">${formatTemperature(day.low)}</span>
           </div>
         </article>
@@ -302,8 +683,9 @@ function renderForecast(data) {
 
 function renderRecentSearches() {
   if (state.recentSearches.length === 0) {
-    elements.recentSearches.innerHTML =
-      '<p class="empty-copy">Recent cities will appear here after a search.</p>';
+    elements.recentSearches.innerHTML = `<p class="empty-copy">${translate(
+      "empty.recentSearches"
+    )}</p>`;
     return;
   }
 
@@ -314,7 +696,7 @@ function renderRecentSearches() {
           class="recent-button"
           type="button"
           data-recent-index="${index}"
-          aria-label="Load ${escapeHtml(city.label)} again"
+          aria-label="${escapeHtml(translate("recent.loadAgain", { city: city.label }))}"
         >
           ${createPinIcon()}
           <span>${escapeHtml(city.label)}</span>
@@ -324,20 +706,24 @@ function renderRecentSearches() {
     .join("");
 }
 
-function renderEmptyWeatherState(title, message) {
+function renderEmptyWeatherState(titleKey, messageKey) {
+  state.activePlace = null;
+  state.activeWeather = null;
+  state.emptyWeather = { titleKey, messageKey };
   elements.currentWeather.innerHTML = `
     <div class="empty-state">
-      <h3>${escapeHtml(title)}</h3>
-      <p>${escapeHtml(message)}</p>
+      <h3>${escapeHtml(translate(titleKey))}</h3>
+      <p>${escapeHtml(translate(messageKey))}</p>
     </div>
   `;
 }
 
-function renderEmptyForecastState(message) {
+function renderEmptyForecastState(messageKey) {
+  state.emptyForecast = { messageKey };
   elements.forecastGrid.innerHTML = `
     <div class="empty-state">
-      <h3>5-day forecast</h3>
-      <p>${escapeHtml(message)}</p>
+      <h3>${escapeHtml(translate("panels.forecastTitle"))}</h3>
+      <p>${escapeHtml(translate(messageKey))}</p>
     </div>
   `;
 }
@@ -445,29 +831,44 @@ function hideLoading() {
   elements.searchButton.disabled = false;
 }
 
-function showError(message) {
-  setStatus(message, "error");
+function showError(messageKey, vars = {}) {
+  setStatus(messageKey, "error", vars);
 }
 
 function clearStatus() {
+  state.status = null;
   elements.statusBanner.hidden = true;
   elements.statusBanner.textContent = "";
   delete elements.statusBanner.dataset.state;
 }
 
-function setStatus(message, stateType = "info") {
+function setStatus(messageKey, stateType = "info", vars = {}) {
+  state.status = { messageKey, stateType, vars };
   elements.statusBanner.hidden = false;
   elements.statusBanner.dataset.state = stateType;
-  elements.statusBanner.textContent = message;
+  elements.statusBanner.textContent = translate(messageKey, vars);
+}
+
+function refreshStatus() {
+  if (!state.status) {
+    return;
+  }
+
+  elements.statusBanner.hidden = false;
+  elements.statusBanner.dataset.state = state.status.stateType;
+  elements.statusBanner.textContent = translate(state.status.messageKey, state.status.vars);
 }
 
 // Weather and date formatting
 function getWeatherDetails(code, isDay) {
-  const baseDetails = WEATHER_CODE_MAP[code] || { label: "Weather update", group: "clouds" };
+  const baseDetails = WEATHER_CODE_MAP[code] || {
+    labelKey: "misc.weatherUpdate",
+    group: "clouds",
+  };
   const icon = resolveIconName(baseDetails.group, Boolean(isDay), code);
 
   return {
-    label: baseDetails.label,
+    label: translate(baseDetails.labelKey),
     group: baseDetails.group,
     icon,
   };
@@ -539,14 +940,14 @@ function formatWind(value) {
 function formatLocalTime(localIsoString) {
   const parts = parseLocalDateTime(localIsoString);
   if (!parts) {
-    return "Local time unavailable";
+    return translate("misc.localTimeUnavailable");
   }
 
   const localDate = new Date(
     Date.UTC(parts.year, parts.month - 1, parts.day, parts.hour, parts.minute)
   );
 
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(getLocale(), {
     weekday: "short",
     hour: "numeric",
     minute: "2-digit",
@@ -556,15 +957,42 @@ function formatLocalTime(localIsoString) {
 
 function formatForecastDay(dateString) {
   const date = new Date(`${dateString}T00:00:00`);
-  return new Intl.DateTimeFormat(undefined, { weekday: "short" }).format(date);
+  return new Intl.DateTimeFormat(getLocale(), { weekday: "short" }).format(date);
 }
 
 function formatForecastDate(dateString) {
   const date = new Date(`${dateString}T00:00:00`);
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat(getLocale(), {
     month: "short",
     day: "numeric",
   }).format(date);
+}
+
+function getLocale() {
+  return LANGUAGE_LOCALES[state.language] || LANGUAGE_LOCALES.en;
+}
+
+function translate(key, vars = {}) {
+  const dictionary = TRANSLATIONS[state.language] || TRANSLATIONS.en;
+  const fallbackValue = getTranslationValue(TRANSLATIONS.en, key);
+  const value = getTranslationValue(dictionary, key) ?? fallbackValue ?? key;
+  return interpolate(String(value), vars);
+}
+
+function getTranslationValue(dictionary, key) {
+  return String(key)
+    .split(".")
+    .reduce(
+      (value, part) =>
+        value && typeof value === "object" && part in value ? value[part] : undefined,
+      dictionary
+    );
+}
+
+function interpolate(template, vars) {
+  return template.replace(/\{(\w+)\}/g, (_, token) =>
+    token in vars ? String(vars[token]) : `{${token}}`
+  );
 }
 
 function parseLocalDateTime(value) {

@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
+      id="meta-description"
       name="description"
       content="A polished local weather app powered by Open-Meteo."
     />
@@ -29,13 +30,26 @@
       <!-- Header and search -->
       <header class="hero">
         <div class="hero-copy">
-          <p class="eyebrow">Weather</p>
-          <h1>Weather</h1>
-          <p class="subtitle">Simple local forecast</p>
+          <p class="eyebrow" data-i18n="app.eyebrow">Weather</p>
+          <h1 data-i18n="app.title">Weather</h1>
+          <p class="subtitle" data-i18n="app.subtitle">Simple local forecast</p>
         </div>
 
         <form class="search-form" id="search-form" role="search" novalidate>
-          <label class="sr-only" for="city-input">Search by city</label>
+          <div class="search-toolbar">
+            <button
+              id="language-toggle"
+              class="language-toggle"
+              type="button"
+              aria-label="Switch language to Spanish"
+            >
+              <span class="language-option" data-lang-option="en">EN</span>
+              <span class="language-divider" aria-hidden="true">/</span>
+              <span class="language-option" data-lang-option="es">ES</span>
+            </button>
+          </div>
+
+          <label class="sr-only" for="city-input" data-i18n="search.label">Search by city</label>
           <div class="search-field">
             <span class="search-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
@@ -48,12 +62,13 @@
               name="city"
               type="search"
               placeholder="Search by city"
+              data-i18n-placeholder="search.placeholder"
               autocomplete="off"
               enterkeyhint="search"
               autofocus
             />
             <button id="search-button" class="search-button" type="submit">
-              Search
+              <span data-i18n="search.button">Search</span>
             </button>
           </div>
         </form>
@@ -63,7 +78,7 @@
         <div class="loading-overlay" id="loading-overlay" hidden>
           <div class="loading-indicator" role="status" aria-live="polite">
             <span class="spinner" aria-hidden="true"></span>
-            <p>Fetching the latest forecast</p>
+            <p data-i18n="loading.message">Fetching the latest forecast</p>
           </div>
         </div>
 
@@ -79,10 +94,12 @@
         <section class="panel panel-current" aria-labelledby="current-heading">
           <div class="panel-heading">
             <div>
-              <p class="panel-kicker">Current weather</p>
-              <h2 id="current-heading">Right now</h2>
+              <p class="panel-kicker" data-i18n="panels.currentKicker">Current weather</p>
+              <h2 id="current-heading" data-i18n="panels.currentTitle">Right now</h2>
             </div>
-            <p class="time-chip" id="time-chip">Local time updating...</p>
+            <p class="time-chip" id="time-chip" data-i18n="misc.localTimeUpdating">
+              Local time updating...
+            </p>
           </div>
 
           <div class="current-weather" id="current-weather">
@@ -104,8 +121,8 @@
         <section class="panel panel-forecast" aria-labelledby="forecast-heading">
           <div class="panel-heading">
             <div>
-              <p class="panel-kicker">Outlook</p>
-              <h2 id="forecast-heading">5-day forecast</h2>
+              <p class="panel-kicker" data-i18n="panels.forecastKicker">Outlook</p>
+              <h2 id="forecast-heading" data-i18n="panels.forecastTitle">5-day forecast</h2>
             </div>
           </div>
 
@@ -147,13 +164,15 @@
         <section class="panel panel-recent" aria-labelledby="recent-heading">
           <div class="panel-heading">
             <div>
-              <p class="panel-kicker">Quick access</p>
-              <h2 id="recent-heading">Recent searches</h2>
+              <p class="panel-kicker" data-i18n="panels.recentKicker">Quick access</p>
+              <h2 id="recent-heading" data-i18n="panels.recentTitle">Recent searches</h2>
             </div>
           </div>
 
           <div class="recent-searches" id="recent-searches">
-            <p class="empty-copy">Recent cities will appear here after a search.</p>
+            <p class="empty-copy" data-i18n="empty.recentSearches">
+              Recent cities will appear here after a search.
+            </p>
           </div>
         </section>
       </main>
