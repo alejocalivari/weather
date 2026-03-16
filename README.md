@@ -1,18 +1,21 @@
-Weather App   https://alejocalivari.github.io/weather/
+# Weather App
 
 Minimal weather dashboard built with vanilla JavaScript.
 
-Features
-• City search
-• 5-day forecast
-• Dynamic backgrounds
-• Recent searches
-• English / Spanish toggle
-• Responsive design
-• Premium UI
+## Features
+- City search
+- Current weather
+- 5-day forecast
+- Dynamic background by weather
+- Recent searches with localStorage
+- English / Spanish toggle
+- Responsive design
 
-Tech
-HTML
-CSS
-JavaScript
-Open-Meteo API
+## Tech Stack
+- HTML
+- CSS
+- JavaScript
+- Open-Meteo API
+
+## Live Demo
+[View project](https://alejocalivari.github.io/weather/)
